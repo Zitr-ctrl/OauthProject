@@ -2,6 +2,7 @@ import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import RegisterForm from './components/RegisterForm';
 import LoginForm from './components/LoginForm';
 import ProtectedPage from './components/ProtectedPage';
+import GoogleSuccess from './pages/GoogleSuccess';
 
 export default function App() {
   return (
@@ -16,6 +17,7 @@ export default function App() {
           <Route path="/" element={<LoginForm />} />
           <Route path="/register" element={<RegisterForm />} />
           <Route path="/protected" element={<ProtectedPage />} />
+          <Route path="/google-success" element={<GoogleSuccess />} />
         </Routes>
       </div>
     </Router>

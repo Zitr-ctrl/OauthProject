@@ -8,17 +8,40 @@ passport.use(new GoogleStrategy({
     callbackURL: process.env.GOOGLE_CALLBACK_URL
   },
   async (accessToken, refreshToken, profile, done) => {
-    const existingUser = await User.findOne({ googleId: profile.id });
-    if (existingUser) return done(null, existingUser);
+    try {
+      const email = profile.emails[0].value;
 
-    const newUser = new User({
-      googleId: profile.id,
-      name: profile.displayName,
-      email: profile.emails[0].value
-    });
+      // Buscar por googleId o email
+      let existingUser = await User.findOne({
+        $or: [
+          { googleId: profile.id },
+          { email: email }
+        ]
+      });
 
-    await newUser.save();
-    done(null, newUser);
+      if (existingUser) {
+        // Si el usuario existe pero no tiene googleId, lo asociamos
+        if (!existingUser.googleId) {
+          existingUser.googleId = profile.id;
+          await existingUser.save();
+        }
+        return done(null, existingUser);
+      }
+
+      // Crear nuevo usuario
+      const newUser = new User({
+        googleId: profile.id,
+        name: profile.displayName,
+        email: email,
+        photo: profile.photos?.[0]?.value // Opcional: guardar la foto
+      });
+
+      await newUser.save();
+      done(null, newUser);
+
+    } catch (error) {
+      done(error, null);
+    }
   }
 ));
 
