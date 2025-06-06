@@ -6,11 +6,25 @@ export default function ProtectedPage() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!isAuthenticated()) {
-      alert('Debes iniciar sesión');
-      navigate('/');
+  const fetchData = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await axios.get("http://localhost:3000/auth/user", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      setUser(response.data);
+    } catch (err) {
+      console.error("Error:", err);
+      setUser(null);
+    } finally {
+      setLoading(false); // <- esto evita quedarse pegado en “Cargando sesión…”
     }
-  }, []);
+  };
+
+  fetchData();
+}, []);
 
   return (
     <div className="bg-white shadow-md rounded p-6 w-full max-w-md text-center">

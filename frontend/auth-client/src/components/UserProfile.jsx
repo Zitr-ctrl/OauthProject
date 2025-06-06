@@ -1,4 +1,3 @@
-// src/pages/GoogleSuccess.jsx
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
@@ -9,22 +8,15 @@ function GoogleSuccess() {
 
   useEffect(() => {
     async function fetchUser() {
-      const token = new URLSearchParams(window.location.search).get('token');
-      if (token) {
-        localStorage.setItem('token', token);
-      }
-
       try {
         const response = await fetch('http://localhost:3000/auth/user', {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          credentials: 'include',
         });
 
         const data = await response.json();
 
         if (response.ok) {
-          login(data); // data es el usuario
+          login(data.user);
           navigate('/protected');
         } else {
           console.error('Error al obtener usuario:', data.message);

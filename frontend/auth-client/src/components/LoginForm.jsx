@@ -1,9 +1,10 @@
+// components/LoginForm.jsx
 import { useState } from 'react';
 import { login } from '../api';
 import { saveToken } from '../utils';
 import { useNavigate } from 'react-router-dom';
 
-export default function LoginForm() {
+export default function LoginForm({ setIsLoggedIn }) {
   const [form, setForm] = useState({ email: '', password: '' });
   const navigate = useNavigate();
 
@@ -11,7 +12,8 @@ export default function LoginForm() {
     e.preventDefault();
     try {
       const res = await login(form);
-      saveToken(res.data.token);
+      saveToken(res.data.token);  // Guarda el token (usualmente en localStorage)
+      setIsLoggedIn(true);         // Actualiza el estado global de autenticación
       alert('Login exitoso');
       navigate('/protected');
     } catch (err) {
@@ -38,10 +40,7 @@ export default function LoginForm() {
         type="password"
         onChange={e => setForm({ ...form, password: e.target.value })}
       />
-      <button
-        type="submit"
-        className="w-full bg-blue-600 text-white p-2 rounded hover:bg-blue-700"
-      >
+      <button type="submit" className="w-full bg-blue-600 text-white p-2 rounded hover:bg-blue-700">
         Iniciar sesión
       </button>
       <button

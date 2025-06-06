@@ -2,6 +2,22 @@ const passport = require('passport');
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
 const User = require('../models/User');
 
+// Serializar el usuario en la sesión
+passport.serializeUser((user, done) => {
+  done(null, user.id); // guardamos el _id de MongoDB
+});
+
+// Deserializar el usuario desde la sesión
+passport.deserializeUser(async (id, done) => {
+  try {
+    const user = await User.findById(id);
+    done(null, user);
+  } catch (err) {
+    done(err);
+  }
+});
+
+// Estrategia de Google
 passport.use(new GoogleStrategy({
     clientID: process.env.GOOGLE_CLIENT_ID,
     clientSecret: process.env.GOOGLE_CLIENT_SECRET,
@@ -20,7 +36,7 @@ passport.use(new GoogleStrategy({
       });
 
       if (existingUser) {
-        // Si el usuario existe pero no tiene googleId, lo asociamos
+        // Asociar googleId si no está guardado
         if (!existingUser.googleId) {
           existingUser.googleId = profile.id;
           await existingUser.save();
@@ -33,7 +49,7 @@ passport.use(new GoogleStrategy({
         googleId: profile.id,
         name: profile.displayName,
         email: email,
-        photo: profile.photos?.[0]?.value // Opcional: guardar la foto
+        photo: profile.photos?.[0]?.value
       });
 
       await newUser.save();
@@ -44,12 +60,3 @@ passport.use(new GoogleStrategy({
     }
   }
 ));
-
-passport.serializeUser((user, done) => {
-  done(null, user.id);
-});
-passport.deserializeUser((id, done) => {
-  User.findById(id, (err, user) => {
-    done(err, user);
-  });
-});
