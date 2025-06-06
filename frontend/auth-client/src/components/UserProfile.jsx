@@ -29,7 +29,7 @@ function GoogleSuccess() {
     fetchUser();
   }, [login, navigate]);
 
-  return <div>Cargando sesión...</div>;
+  return;
 }
 
 export default GoogleSuccess;
