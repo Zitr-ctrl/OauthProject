@@ -1,6 +1,7 @@
 require("dotenv").config();
 const express = require("express");
-const mongoose = require("mongoose");
+const sequelize = require("./config/database");
+const User = require("./models/User");
 const session = require("express-session");
 const passport = require("passport");
 const cookieParser = require("cookie-parser");
@@ -17,11 +18,15 @@ app.use(session({ secret: "secret", resave: false, saveUninitialized: false }));
 app.use(passport.initialize());
 app.use(passport.session());
 
-// Conexión a MongoDB
-mongoose
-  .connect(process.env.MONGO_URI)
-  .then(() => console.log("Conectado a MongoDB"))
-  .catch((err) => console.error(err));
+// Sincronizamos la base de datos
+sequelize
+  .sync({ force: false })
+  .then(() => {
+    console.log("Base de datos sincronizada");
+  })
+  .catch((err) => {
+    console.error("Error al sincronizar la base de datos:", err);
+  });
 
 // Rutas
 app.use("/auth", require("./routes/authRoutes"));

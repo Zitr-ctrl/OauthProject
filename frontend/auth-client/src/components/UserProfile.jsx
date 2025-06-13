@@ -1,35 +1,20 @@
-import { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
-function GoogleSuccess() {
-  const { login } = useAuth();
-  const navigate = useNavigate();
+function UserProfile() {
+  const { user } = useAuth();  // Usamos el contexto para acceder al usuario
 
-  useEffect(() => {
-    async function fetchUser() {
-      try {
-        const response = await fetch('http://localhost:3000/auth/user', {
-          credentials: 'include',
-        });
+  if (!user) {
+    return <div>Cargando perfil...</div>;
+  }
 
-        const data = await response.json();
-
-        if (response.ok) {
-          login(data.user);
-          navigate('/protected');
-        } else {
-          console.error('Error al obtener usuario:', data.message);
-        }
-      } catch (error) {
-        console.error('Error en GoogleSuccess:', error);
-      }
-    }
-
-    fetchUser();
-  }, [login, navigate]);
-
-  return;
+  return (
+    <div className="profile-container">
+      <h1>Perfil de Usuario</h1>
+      <p><strong>Nombre:</strong> {user.name}</p>
+      <p><strong>Email:</strong> {user.email}</p>
+      {/* Aquí puedes agregar más detalles del usuario si lo deseas */}
+    </div>
+  );
 }
 
-export default GoogleSuccess;
+export default UserProfile;

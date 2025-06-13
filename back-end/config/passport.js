@@ -1,6 +1,7 @@
 const passport = require('passport');
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
-const User = require('../models/User');
+const { Op } = require('sequelize'); // Aquí importamos `Op` de Sequelize
+const User = require('../models/User'); // Importamos el modelo User
 
 // Serializar el usuario en la sesión
 passport.serializeUser((user, done) => {
@@ -10,7 +11,7 @@ passport.serializeUser((user, done) => {
 // Deserializar el usuario desde la sesión
 passport.deserializeUser(async (id, done) => {
   try {
-    const user = await User.findById(id);
+    const user = await User.findByPk(id);  // Cambié `findById` por `findByPk`
     done(null, user);
   } catch (err) {
     done(err);
@@ -21,40 +22,40 @@ passport.deserializeUser(async (id, done) => {
 passport.use(new GoogleStrategy({
     clientID: process.env.GOOGLE_CLIENT_ID,
     clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-    callbackURL: process.env.GOOGLE_CALLBACK_URL
+    callbackURL: process.env.GOOGLE_CALLBACK_URL,
   },
   async (accessToken, refreshToken, profile, done) => {
     try {
       const email = profile.emails[0].value;
+      console.log('Email recibido de Google:', email);  // Verifica que el email se recibe correctamente
 
-      // Buscar por googleId o email
       let existingUser = await User.findOne({
-        $or: [
-          { googleId: profile.id },
-          { email: email }
-        ]
+        where: {
+          [Op.or]: [  // Usamos el operador `Op.or` de Sequelize
+            { googleId: profile.id },  // Busca por googleId
+            { email: email }  // O por email
+          ]
+        }
       });
 
       if (existingUser) {
-        // Asociar googleId si no está guardado
+        // Si el usuario ya existe, lo devolvemos
         if (!existingUser.googleId) {
-          existingUser.googleId = profile.id;
+          existingUser.googleId = profile.id;  // Asocia el googleId si aún no lo tiene
           await existingUser.save();
         }
-        return done(null, existingUser);
+        return done(null, existingUser);  // Devuelve el usuario existente
       }
 
-      // Crear nuevo usuario
-      const newUser = new User({
+      // Si el usuario no existe, lo creamos
+      const newUser = await User.create({
         googleId: profile.id,
         name: profile.displayName,
         email: email,
         photo: profile.photos?.[0]?.value
       });
 
-      await newUser.save();
-      done(null, newUser);
-
+      done(null, newUser);  // Devuelve el nuevo usuario
     } catch (error) {
       done(error, null);
     }

@@ -1,34 +1,33 @@
 import { createContext, useContext, useState, useEffect } from "react";
 
+// Creamos el contexto
 const AuthContext = createContext();
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [loading, setLoading] = useState(true); // <- OK
+  const [loading, setLoading] = useState(true);
 
   const login = (userData, token) => {
-    setUser(userData);
+    setUser(userData);  // Guarda el usuario en el contexto
     setIsLoggedIn(true);
     if (token) {
-      localStorage.setItem("token", token);
+      localStorage.setItem("token", token);  // Guarda el token en localStorage
     }
   };
 
   const logout = () => {
     setUser(null);
     setIsLoggedIn(false);
-    localStorage.removeItem("token");
+    localStorage.removeItem("token");  // Remueve el token de localStorage
   };
 
   useEffect(() => {
     const checkAuth = async () => {
       const token = localStorage.getItem("token");
-      console.log("Token cargado desde localStorage:", token);
 
       if (!token) {
-        console.warn("No token encontrado en localStorage");
-        setLoading(false); // <-- IMPORTANTE
+        setLoading(false);
         return;
       }
 
@@ -42,19 +41,17 @@ export function AuthProvider({ children }) {
         const data = await response.json();
 
         if (!response.ok) {
-          console.error("Error al obtener usuario:", data.message);
           setUser(null);
           setIsLoggedIn(false);
         } else {
-          setUser(data); // <-- Asegúrate de que tu backend retorne username y email
+          setUser(data.user);  // Actualiza el usuario en el contexto
           setIsLoggedIn(true);
         }
       } catch (err) {
-        console.error("Error al verificar autenticación:", err);
         setUser(null);
         setIsLoggedIn(false);
       } finally {
-        setLoading(false); // <-- SIEMPRE poner esto
+        setLoading(false);
       }
     };
 
@@ -68,6 +65,7 @@ export function AuthProvider({ children }) {
   );
 }
 
+// Exportamos el hook useAuth para acceder al contexto
 export function useAuth() {
-  return useContext(AuthContext);
+  return useContext(AuthContext);  // Esto permite usar el contexto en otros componentes
 }
