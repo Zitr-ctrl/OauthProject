@@ -2,10 +2,17 @@ import { useState } from 'react';
 import { register } from '../api';
 
 export default function RegisterForm() {
-  const [form, setForm] = useState({ name: '', email: '', password: '' });
+  const [form, setForm] = useState({ name: '', email: '', password: '', confirmPassword: '' });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    // Validar que las contraseñas coincidan
+    if (form.password !== form.confirmPassword) {
+      alert('Las contraseñas no coinciden');
+      return;
+    }
+    
     try {
       const res = await register(form);
       alert('Registrado con éxito');
@@ -33,6 +40,12 @@ export default function RegisterForm() {
         placeholder="Contraseña"
         type="password"
         onChange={e => setForm({ ...form, password: e.target.value })}
+      />
+      <input
+        className="w-full p-2 border border-gray-300 rounded"
+        placeholder="Repetir Contraseña"
+        type="password"
+        onChange={e => setForm({ ...form, confirmPassword: e.target.value })}
       />
       <button
         type="submit"

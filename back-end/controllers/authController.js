@@ -4,7 +4,13 @@ const jwt = require('jsonwebtoken');
 
 exports.register = async (req, res) => {
   const { name, email, password } = req.body;
-  const exists = await User.findOne({ email });
+  
+  // Validación básica para email y contraseñas
+  if (!email || !password || !name) {
+    return res.status(400).json({ message: 'Faltan campos obligatorios' });
+  }
+
+  const exists = await User.findOne({ email: email }).exec();
   if (exists) return res.status(400).json({ message: "Usuario ya registrado" });
 
   const hashed = await bcrypt.hash(password, 10);
@@ -17,7 +23,12 @@ exports.register = async (req, res) => {
 exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
-    const user = await User.findOne({ email });
+
+    if (!email || !password) {
+      return res.status(400).json({ message: "Email y contraseña son requeridos" });
+    }
+
+    const user = await User.findOne({ email }).exec();
 
     if (!user) {
       return res.status(404).json({ message: "Usuario no encontrado" });
@@ -28,9 +39,7 @@ exports.login = async (req, res) => {
       return res.status(401).json({ message: "Contraseña incorrecta" });
     }
 
-    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
-      expiresIn: '1h',
-    });
+    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
 
     res.json({
       token,
@@ -43,28 +52,5 @@ exports.login = async (req, res) => {
   } catch (error) {
     console.error("Error en login:", error);
     res.status(500).json({ message: "Error interno del servidor" });
-  }
-};
-
-exports.getUser = async (req, res) => {
-  const authHeader = req.headers.authorization;
-
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return res.status(401).json({ message: 'Token no proporcionado' });
-  }
-
-  const token = authHeader.split(' ')[1];
-
-  try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const user = await User.findById(decoded.id).select('-password'); // Excluye la contraseña
-
-    if (!user) {
-      return res.status(404).json({ message: 'Usuario no encontrado' });
-    }
-
-    res.json({ user }); // Enviamos { user: { ... } }
-  } catch (error) {
-    return res.status(401).json({ message: 'Token inválido o expirado' });
   }
 };
